@@ -62,7 +62,7 @@ def compare(s1, s2, w1n,w2n):
             
             
             if a != b:
-                
+                s2.cell(row=i,column=j).style = cfill
                 if type(a) in numlist and type(b) == type(nt):
 #                    print "hi" + str(a)
                     comtxt = str(w1n)+": " + str(a)+ ". diff: "+ str(a)
