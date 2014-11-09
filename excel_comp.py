@@ -51,12 +51,14 @@ def compare(s1, s2, w1n,w2n):
             b = s2.cell(row=i,column=j).value
 #            print a, type(a)
             nt = None
-#            dt = datetime.datetime.today()
+            dt = datetime.datetime.today()
             tlist = [type(int()), type(float()),type(long()), type(nt)]
             numlist = [type(int()), type(float()),type(long())]
+                
             if type(a) not in numlist and type(b) not in numlist:
-                a = str(a)
-                b = str(b)
+                a = str(unicode(a))
+                b = str(unicode(b))
+            
 #            print a,type(a)
 #            print b,type(b)
             
@@ -110,6 +112,7 @@ Loads the respective Excell Workbook specified by the user and prepares the scen
     with highlights for differences and comments duly put.
 
 """
+os.chdir('C:\\Users\\nikil\\Desktop')
 f1 = 'sd_old.xlsx'
 f2 = 'sd_new.xlsx'
 t1 = time.time()
