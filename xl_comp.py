@@ -71,16 +71,19 @@ def the_mess(l):
     if os.getcwd() != work_dir:
         os.chdir(work_dir)
         print "successfully changed path!"
-    if l[0] != '':
+    if l[1] != '' and l[2] != '':
         f1 = l[1][l[1].rfind('/')+1:]
         f2 = l[2][l[2].rfind('/')+1:]
         the_mayhem(f1,f2)
-    else:
+    elif l[0] != '':
         files_list = filter(lambda x: x.endswith('.xlsx'), os.listdir(work_dir))
+        print files_list
         lfile = len(files_list)
-        for i in xrange(lfile):
-            f1 = files_list[i-1]
-            f2 = files_list[i]
+        cnt = 0
+        while cnt < lfile:
+            f1 = files_list[cnt]
+            f2 = files_list[cnt+1]
+            cnt += 2
             the_mayhem(f1,f2)
 
 def the_mayhem(f1,f2):
