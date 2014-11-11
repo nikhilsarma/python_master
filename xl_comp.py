@@ -24,39 +24,26 @@ def compare(s1, s2, w1n,w2n):
                 a = str(unicode(a))
                 b = str(unicode(b))
             if a != b:
-                s2.cell(row=i,column=j).style = cfill
+                #s2.cell(row=i,column=j).style = cfill
                 if type(a) in numlist and type(b) == type(nt):
 #                    print "hi" + str(a)
                     comtxt = str(w1n)+": " + str(a)+ ". diff: "+ str(a)
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
+                    
                 elif type(b) in numlist and type(a) == type(nt):
 #                    print "hi" + str(b)
                     comtxt = str(w1n)+": " + str(a)+ ". diff: "+ str(b)
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
+                    
                 elif type(a) in numlist and type(b) in numlist:
                     comtxt = str(w1n)+": " + str(a)+ ". diff: "+ str(b-a)
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
-                elif type(a) == type(nt) and type(b) == type(str()):
-                    comtxt = str(w1n)+": " + str(a)+ "."
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
-                elif type(b) == type(nt) and type(a) == type(str()):
-                    comtxt = str(w1n)+": " + str(a)+ "."
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
+
                 elif type(a) == type(str()) and type(b) == type(str()):
                     comtxt = str(w1n)+": " + str(a)+ "."
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
-"""
-                elif type(a) == type(dt) and type(b) == type(dt):
-                    comtxt = str(w1n)+": " + str(a.date())+ "."
-                    comment = Comment(comtxt, w2n)
-                    s2.cell(row=i,column=j).comment = comment
-"""
+
+                elif type(a) != type(b):
+                    comtxt = str(w1n)+": " + str(a)+ ". \nIncompatible data"
+
+                comment = Comment(comtxt, w2n)
+                s2.cell(row=i,column=j).comment = comment    
 
 #sets the path to the curret working directory where the files to be compared can be found easily
 #path = raw_input("enter the path of present working directory: ")                
