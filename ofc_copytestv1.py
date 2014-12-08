@@ -2,7 +2,8 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Style, fills, PatternFill, Color
 import datetime, time,os
-import os, xlrd
+import win32com.client
+#import os, xlrd
 
 coldic = {'Cocoa':'D2691E','Aqua':'7EC0EE','Olive':'89892B','Yellow':'CCA300','Orange':'FF8000'} 
 
@@ -35,8 +36,7 @@ def open_xls_as_xlsx(filename):
     return nb
 
 def compare(s1, s2, w1n,w2n, col, eps):
-    #print "hello"
-    #print col
+
     #rowrange = max(s1.get_highest_row(), s2.get_highest_row())
     #colrange = max(s1.get_highest_column(), s2.get_highest_column())
     #print rowrange,colrange
@@ -53,11 +53,9 @@ def compare(s1, s2, w1n,w2n, col, eps):
                 x = s1.cell(row=i,column=j)
                 y = s2.cell(row=i,column=j)
                 xfor_code,yfor_code = x.number_format,y.number_format
-                #print i,j
+                
                 a = x.value
                 b = y.value
-                #print a,b
-                #print type(a),type(b)
                 nt = None
                 dt = datetime.datetime.today()
                 tlist = [type(int()), type(float()),type(long()), type(nt)]
@@ -69,60 +67,84 @@ def compare(s1, s2, w1n,w2n, col, eps):
                     #print a + str('->')+ b
                     #print str(type(a)) +str('->')+str(type(b))
                 if a != b:
-                    print "nikhil"
                     succ = "Fail"
                     e = "Data Mismatches"
                     comtxt = None
-                    print a,b
+                    
                     if type(a) in numlist and (type(b) == type(nt) or type(b) == type(unicode())):
-                        comtxt = str(w1n)+": " + unicode(a)+ ". diff: "+ unicode(a)
+                        comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(a)
                     
                     elif type(b) in numlist and (type(a) == type(nt) or type(a) == type(unicode())):
-                        comtxt = str(w1n)+": " + unicode(a)+ ". diff: "+ unicode(b)
+                        comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(b)
                     
                     elif type(a) in numlist and type(b) in numlist:
                         if abs(a-b) <= eps:
                             #print "ignored" + str(a) + str(" and ") +str(b)
                             continue
-                        comtxt = str(w1n)+": " + unicode(a)+ ". diff: "+ unicode(b-a)
+                        comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(b-a)
 
                     elif type(a) == type(unicode()) and type(b) == type(unicode()):
-                        comtxt = str(w1n)+": " + unicode(a)+ "."
-                        #print "again nikhil"
+                        comtxt = str(w1n)+": " + unicode(a)
+                
                     comment = Comment(comtxt, w2n)
                     y.style = cfill
                     y.comment = comment
                     y.number_format = yfor_code
-                    #print "see it here"
                 else:
                     comtxt = None
     except KeyboardInterrupt:
         succ = "Abort"
         e = "KeyboardInterrupt"
-    #except Exception as e:
-        #succ = "Abort"
+    except Exception as e:
+        succ = "Abort"
             
     return [succ,e]
               
 
 def the_mess(l):
     col,eps = l[3],l[4]
-    #print l
+    print l
     print "Comparision started...!"
     report = []
     if l[1] != '' and l[2] != '':
         f1 = l[1]
         f2 = l[2]
+        print f1,f2
         work_dir = l[2][:l[2].rfind('/')].replace('/','//')
+        print work_dir
         os.chdir(work_dir)
-        rprt = the_mayhem(f1,f2,col,eps)
-        report.append(rprt)
+        w1n = f1[f1.rfind('/')+1:f1.rfind('.')]
+        w2n = f2[f2.rfind('/')+1:f2.rfind('.')]
+        if f1.endswith('.xls') and f2.endswith('.xls'):
+            xl = win32com.client.Dispatch("Excel.Application")
+            wb1 = xl.Workbooks.Open(f1)
+            wb2 = xl.Workbooks.Open(f2)
+            wb1.SaveAs(f1+"x", FileFormat = 51)
+            wb2.SaveAs(f2+"x", FileFormat = 51)
+            wb1.Close()
+            wb2.Close()
+            xl.Quit()
+            rprt = the_mayhem(f1,f2,col,eps)
+            report.append(rprt)
+        else:
+            rprt = the_mayhem(f1,f2,col,eps)
+            report.append(rprt)
     elif l[0] != '':
         work_dir = l[0].replace("/","//")
         os.chdir(work_dir)
+        tocon_list = filter(lambda x: x.endswith('.xls'), os.listdir(work_dir))
+        xl = win32com.client.Dispatch("Excel.Application")
+        for e in tocon_list:
+            fname = os.path.join(os.getcwd(),e)
+            print fname
+            #fname = fname.encode('string-escape')
+            wb = xl.Workbooks.Open(fname)
+            wb.SaveAs(fname+"x", FileFormat = 51)
+            wb.Close()
+        xl.Quit()
         #print "successfully changed path!"
-        #files_list = filter(lambda x: x.endswith('.xlsx'), os.listdir(work_dir))
-        files_list = filter(lambda x: x.endswith('.xlsx') or x.endswith('.xls'), os.listdir(work_dir))
+        files_list = filter(lambda x: x.endswith('.xlsx'), os.listdir(work_dir))
+        #files_list = filter(lambda x: x.endswith('.xlsx') or x.endswith('.xls'), os.listdir(work_dir))
         files_list.sort()
         lfile = len(files_list)
         cnt = 0
@@ -144,8 +166,8 @@ def the_mayhem(f1,f2,col,eps):
     else:
         w1 = load_workbook(f1)
         w2 = load_workbook(f2)
-    w1n = f1[f1.rfind('/')+1:f1.find('.')]
-    w2n = f2[f2.rfind('/')+1:f2.find('.')]
+    w1n = f1[f1.rfind('/')+1:f1.rfind('.')]
+    w2n = f2[f2.rfind('/')+1:f2.rfind('.')]
     wbsucc = "Pass"
     sdic = {}
 
