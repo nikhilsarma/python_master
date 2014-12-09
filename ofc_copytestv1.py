@@ -107,44 +107,16 @@ def the_mess(l):
     print "Comparision started...!"
     report = []
     if l[1] != '' and l[2] != '':
-        f1 = l[1]
-        f2 = l[2]
-        print f1,f2
+        f1,f2 = l[1],l[2]
         work_dir = l[2][:l[2].rfind('/')].replace('/','//')
-        print work_dir
+        #print work_dir
         os.chdir(work_dir)
-        w1n = f1[f1.rfind('/')+1:f1.rfind('.')]
-        w2n = f2[f2.rfind('/')+1:f2.rfind('.')]
-        if f1.endswith('.xls') and f2.endswith('.xls'):
-            xl = win32com.client.Dispatch("Excel.Application")
-            wb1 = xl.Workbooks.Open(f1)
-            wb2 = xl.Workbooks.Open(f2)
-            wb1.SaveAs(f1+"x", FileFormat = 51)
-            wb2.SaveAs(f2+"x", FileFormat = 51)
-            wb1.Close()
-            wb2.Close()
-            xl.Quit()
-            rprt = the_mayhem(f1,f2,col,eps)
-            report.append(rprt)
-        else:
-            rprt = the_mayhem(f1,f2,col,eps)
-            report.append(rprt)
+        rprt = the_mayhem(f1,f2,col,eps)
+        report.append(rprt)
     elif l[0] != '':
         work_dir = l[0].replace("/","//")
         os.chdir(work_dir)
-        tocon_list = filter(lambda x: x.endswith('.xls'), os.listdir(work_dir))
-        xl = win32com.client.Dispatch("Excel.Application")
-        for e in tocon_list:
-            fname = os.path.join(os.getcwd(),e)
-            print fname
-            #fname = fname.encode('string-escape')
-            wb = xl.Workbooks.Open(fname)
-            wb.SaveAs(fname+"x", FileFormat = 51)
-            wb.Close()
-        xl.Quit()
-        #print "successfully changed path!"
-        files_list = filter(lambda x: x.endswith('.xlsx'), os.listdir(work_dir))
-        #files_list = filter(lambda x: x.endswith('.xlsx') or x.endswith('.xls'), os.listdir(work_dir))
+        files_list = [e.lower() for e in filter(lambda x: x.endswith('.xlsx') or x.endswith('.xls'), os.listdir(work_dir))]
         files_list.sort()
         lfile = len(files_list)
         cnt = 0
@@ -157,7 +129,7 @@ def the_mess(l):
     return report
     #print report
 
-def the_mayhem(f1,f2,col,eps):
+def the_mayhem(f1,f2,col):
     print "Comparing... " +f1 +" vs " + f2
     t1 = time.time()
     if f1.endswith('.xls') and f2.endswith('.xls'):
@@ -173,12 +145,93 @@ def the_mayhem(f1,f2,col,eps):
 
     for i in xrange(len(w1.worksheets)):
         for j in xrange(i,i+1):
-            smsg = compare(w1.worksheets[j], w2.worksheets[j],w1n,w2n,col,eps)
+            smsg = compare(w1.worksheets[j], w2.worksheets[j],w1n,w2n,col)
             sdic[w1.worksheets[j].title] = smsg[0],smsg[1]
             if f2.endswith('.xls') and smsg[0] == 'Fail':
                 w2.save(w2n + str('.xlsx'))
             elif f2.endswith('.xlsx') and smsg[0] == 'Fail':
                 w2.save(f2)
+    for e in sdic.values():
+        if "Pass" not in e[0]:
+            wbsucc = "Fail"
+    
+    t2 = time.time()
+    ttime = round((t2-t1),2)
+    #print sdic
+    return [ttime,w1n,w2n,wbsucc,sdic]
+
+
+
+
+def xls_x_conv(xfl,*fpath):
+    print "in the conv function"
+    xl = win32com.client.Dispatch("Excel.Application")
+    if fpath:
+        os.chdir(fpath[0])
+        for e in xfl:
+            fname = os.path.join(os.getcwd(),e)
+            wb = xl.Workbooks.Open(fname)
+            wb.SaveAs(fname+"x", FileFormat = 51)
+            wb.Close()
+    else:
+        for e in xfl:
+            os.chdir(e[:e.rfind('/')].replace('/','//'))
+            fname = os.path.join(os.getcwd(),e[e.rfind('/')+1:])
+            wb = xl.Workbooks.Open(fname)
+            wb.SaveAs(fname+"x", FileFormat = 51)
+            wb.Close()
+    xl.Quit()
+
+def the_mess1(l):
+    col,eps = l[3],l[4]
+    #print l
+    #print "Comparision started...!"
+    report = []
+    if l[1] != '' and l[2] != '':
+        f1 = l[1]
+        f2 = l[2]
+        #print f1,f2
+        if f1.endswith('.xls') and f2.endswith('.xls'):
+            xls_x_conv([f1,f2])
+            rprt = the_mayhem1(f1,f2,col,eps)
+            report.append(rprt)
+        else:
+            rprt = the_mayhem1(f1,f2,col,eps)
+            report.append(rprt)
+    elif l[0] != '':
+        work_dir = l[0].replace("/","//")
+        os.chdir(work_dir)
+        tocon_list = filter(lambda x: x.endswith('.xls'), os.listdir(work_dir))
+        xls_x_conv(tocon_list,work_dir)
+        #print "successfully changed path!"
+        files_list = [e.lower() for e in filter(lambda x: x.endswith('.xlsx'), os.listdir(work_dir))]
+        files_list.sort()
+        lfile = len(files_list)
+        cnt = 0
+        while cnt < lfile:
+            f1 = files_list[cnt]
+            f2 = files_list[cnt+1]
+            cnt += 2
+            rprt = the_mayhem1(f1,f2,col,eps)
+            report.append(rprt)
+    return report
+    #print report
+
+def the_mayhem1(f1,f2,col,eps):
+    print "Comparing... " +f1 +" vs " + f2
+    t1 = time.time()
+    w1 = load_workbook(f1)
+    w2 = load_workbook(f2)
+    w1n = f1[f1.rfind('/')+1:f1.rfind('.')]
+    w2n = f2[f2.rfind('/')+1:f2.rfind('.')]
+    wbsucc = "Pass"
+    sdic = {}
+
+    for i in xrange(len(w1.worksheets)):
+        for j in xrange(i,i+1):
+            smsg = compare(w1.worksheets[j], w2.worksheets[j],w1n,w2n,col,eps)
+            sdic[w1.worksheets[j].title] = smsg[0],smsg[1]
+            w2.save(f2)
     for e in sdic.values():
         if "Pass" not in e[0]:
             wbsucc = "Fail"
