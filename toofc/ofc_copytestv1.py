@@ -2,10 +2,6 @@
 
 
 """
-
-
-
-
 from openpyxl import Workbook, load_workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Style, fills, PatternFill, Color

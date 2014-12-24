@@ -7,9 +7,9 @@ BGCOL = 'aqua'
 
 root = Tk()
 root.configure(background=BGCOL)
-root.title("Excel Comparator!")
+root.title("The Comparator!")
 root.geometry("500x350")
-desc = "Welcome to Excel Comparision tool!"
+desc = "Welcome to the Comparision tool!"
 
 Label(root, justify=RIGHT, pady = 10, text=desc,bg=BGCOL).grid(row=5)
 Label(root, justify=RIGHT, pady = 10,bg=BGCOL, text="Select the directory for hassle free comparision").grid(row=8)
@@ -48,16 +48,17 @@ def to_comp():
 
 
     if comp_mode.get() == 1:
-        #res = the_mess1([fd,f1,f2,col,float(eps)])
-        pass
+        res = the_mess1([fd,f1,f2,col,float(eps)])
+        #pass
         
     elif comp_mode.get() == 2:
-        #res = comp_large([fd,f1,f2,col,float(eps)])
-        pass
+        import fastreader
+        res = fastreader.the_lmess([fd,f1,f2])
+        #pass
     
     elif comp_mode.get() == 3:
-        import cmpcsv
-        res = cmpcsv.comp_csv(f1,f2)
+        import test1csv 
+        res = test1csv.the_mess([fd,f1,f2])
         print res
     if res:
         showinfo("Done!","Finished Comparing!")
@@ -68,16 +69,22 @@ def gen_report():
 
     #print rep
     
-    rtxt = "Exec.time\tWorkBook [Result]\t\tWorkSheets\tResult"
-    u = "-"*(len(rtxt)+38)
-    print str('\n\n') + u
-    print rtxt + str('\n')  + u
+    rtxt_xl = "Exec.time\tWorkBook [Result]\t\tWorkSheets\tResult"
+    uxl = "-"*(len(rtxt_xl)+38)
+    rtxt_csv = "Exec.time\tfiles [Result]\t\tCreated file\tResult"
+    print str('\n\n') + uxl
+    
     #msg = "Trust because you are willing to accept the risk, not because it's safe or certain"
     try:
-        ecnt = 0
-        for e in rep[0]:
-            print str(e[0]) + str('\t\t') +  e[1] +str(" Vs ")+e[2]+ " ["+ e[3].upper() + "]"
-            rep1(e[4])
+        if comp_mode.get() == 1:
+            print rtxt_xl + str('\n')  + uxl
+            for e in rep[0]:
+                print str(e[0]) + str('\t\t') +  e[1] +str(" Vs ")+e[2]+ " ["+ e[3].upper() + "]"
+                rep1(e[4])
+        elif comp_mode.get() == 3:
+            print rtxt_csv + str('\n')  + uxl
+            for e in rep[0]:
+                print str(e[0]) + str('\t\t') +  str(e[2])+ " ["+ e[1].upper() + "]"
         if len(rep) != 0:
             del rep[0]
     except Exception as e:
@@ -109,7 +116,7 @@ def to_reset():
 
 res_mode = IntVar()
 comp_mode = IntVar()
-
+comp_mode.set(1)
 
 clist = ["Yellow", "Olive", "Aqua","Cocoa","Orange"]
 color = StringVar(root)
