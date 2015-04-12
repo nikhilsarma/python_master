@@ -197,6 +197,7 @@ def csv_comp(f1,f2):
 
 def the_mess1(l):
     col,eps = l[3],l[4]
+    print os.getcwd()
     #print l
     #print "Comparision started...!"
     report = []

@@ -61,6 +61,7 @@ def to_comp():
         res = test1csv.the_mess([fd,f1,f2])
         print res
     if res:
+        print res
         showinfo("Done!","Finished Comparing!")
         rep.append(res)
     
