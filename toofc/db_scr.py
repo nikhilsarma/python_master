@@ -1,6 +1,6 @@
 #from ofc_copytestv1 import *
 #from xl_comp_new import *
-from compxl import *
+#from compxl import *
 from Tkinter import *
 import ttk
 import tkFileDialog, random
