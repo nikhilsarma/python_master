@@ -1,0 +1,296 @@
+"""
+__author__ = "Nikhil" [Suman (Idea), Kushal, Sushant]
+__copyright__ = "LoL"
+__credits__ = [Team Everest]
+__license__ = "GPL"
+__version__ = "1.0"
+__maintainer__ = "Team Everest"
+__status__ = "Mess"
+
+"""
+
+
+#import pyodbc
+import os,xlsxwriter,time,datetime
+from openpyxl import Workbook, load_workbook
+from openpyxl.comments import Comment
+from openpyxl.styles import Style, fills, PatternFill, Color
+
+"""
+Declaring for the color dictionary,
+the Ignore variable 'eps',
+different color ranges, Val1, Val2. And for the list of different types of data expected.
+"""
+coldic = {'Cocoa':'D2691E','Blue':'7EC0EE','Olive':'89892B','Yellow':'CCA300','Orange':'FF8000','Rose':'FF7C80','Green':'99CC00'}
+eps = 0.005
+val1 = 10
+val2 = 100
+nt = None
+dt = datetime.datetime.today()
+tlist = [type(int()), type(float()),type(long()), type(nt)]
+numlist = [type(int()), type(float()),type(long())]
+str_list = ["d-mmm-yy","@"]
+uarr,darr = u'\u2b06', u'\u2b07'
+
+
+def compare(s1, s2, w1n, w2n):
+    """
+    Gets the two counter sheets from two workbooks:
+    
+    setsup the scene to scan for the MAX of rows/columns among the sheets(Normalising to cover all cells), and defines three colors 'cfill', 
+    ReadsIn each cell value from two sheets, their formats.
+
+    If the cell value is not in the numberList OR stringList convert it to unicode:
+    This is done Specifically beacuse, when readingIn for the empty cells, we get a 'None' type object, which we convert to string type as 'none'.
+
+    Checks for possible cases:
+    If the value1 is None/string and value2 is Number _Vs_ If the value1 is Number and value2 is None/string
+    If the value1 is string and value2 is string:
+    If the value1 is Number and value2 is Number: calculates for the Difference_value OR Difference_Percentage and Ignores them on a conditioned 'eps' value
+    Please Update for the 'diff_val' <--> 'diff_per' as necessary  
+    
+    """
+    
+    rowrange = max(s1.max_row, s2.max_row)
+    colrange = max(s1.max_column, s2.max_column)
+    cfill1 = Style(fill=PatternFill(patternType='solid', fgColor=Color(coldic["Yellow"])))
+    cfill2 = Style(fill=PatternFill(patternType='solid', fgColor=Color(coldic["Green"])))
+    cfill3 = Style(fill=PatternFill(patternType='solid', fgColor=Color(coldic["Rose"])))
+    succ = "Pass"
+    e = 'Data Matches!'
+
+    try:
+        for i in xrange(1,rowrange+1):
+            for j in xrange(1,colrange+1):
+                #time.sleep(0.5)
+                x = s1.cell(row=i,column=j)
+                y = s2.cell(row=i,column=j)
+                xfor_code,yfor_code = x.number_format,y.number_format
+                a,b = x.value, y.value
+
+                if (type(a) not in numlist or x.number_format in str_list) and (type(b) not in numlist or y.number_format in str_list):
+                    a,b = unicode(a).lower(),unicode(b).lower()
+                    
+                if a != b:
+                    e = "Data Mismatches"
+                    comtxt = None
+                    
+                    if type(a) in numlist and (type(b) == type(nt) or type(b) == type(unicode())):
+                        comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(a)
+                        y.style = cfill3
+                    
+                    elif type(b) in numlist and (type(a) == type(nt) or type(a) == type(unicode())):
+                        comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(b)
+                        y.style = cfill3
+                    
+                    elif type(a) in numlist and type(b) in numlist:
+                        diff_val = float(abs(a-b))
+                        #diff_per = diff_val/abs(a)*100 if a !=0 else b
+                        if diff_val <= eps:
+                            continue
+                        y.style = cfill1 if diff_val <= float(val1) else cfill2 if diff_val <= float(val2) else cfill3
+
+                        succ = "Fail"
+                        if a < b:
+                            comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(b-a)+ str("\n")+unicode(round(diff_val,4))+ " % " + unicode(uarr)
+                        elif a > b:
+                            comtxt = str(w1n)+": " + unicode(a)+ str("\ndiff: ")+ unicode(b-a)+ str("\n")+unicode(round(diff_val,4))+ " % " + unicode(darr)
+
+                    elif type(a) == type(unicode()) and type(b) == type(unicode()):
+                        comtxt = str(w1n)+": " + unicode(a)
+                        y.style = cfill3
+                
+                    comment = Comment(comtxt, w2n)
+                    y.comment = comment
+                    y.number_format = yfor_code
+                else:
+                    comtxt = None
+    except KeyboardInterrupt:
+        succ = "Abort"
+        e = "KeyboardInterrupt"
+    except Exception as e:
+        succ = "Abort"
+
+    return [succ,e]
+
+
+def rows(cursor, size=750):
+    """
+    what? : Gives single row from the fetched resultset
+
+    Gets the Cursor, sets the size of the data to be fetched.
+    uses fetchmany to fetch 'size' amount of data/rows from the database(saves time instead of fetcing one record at a time hitting db that many times)
+
+    Finally: Spits out, only one row form the huge dataRecieved (need to write one row at a time to the sheet).
+    """
+    while True:
+        rows = cursor.fetchmany(size)
+        if not rows:
+            break
+        for row in rows:
+            yield row 
+
+def toexport(i,cur):
+    """
+    what? : Exports the resultset from the dBase to the TestCaseNo Folder.
+    
+    Gets the indexed 'i' and the cursor value from 'export_check': index value 'i', used to name the file extract (w.r.t it's database environment)
+    creating the folder with TestCaseNo and adding extracted file with proper naming convention.
+    Setting up the scene(cofiguring the workbook formating parameters), with different list of datatypes from expected columns.
+
+    executing the query in an envi. and writing the columns with help of enumerate
+    use of enumerate: Index based looping: Need to have cell coordinates to write data to sheet. this helps in setting up the row/col index:
+    "worksheet.write(rownum,colnum,value,[format])"
+
+    writing rows to sheet: pass executed cursor 'x', to function 'rows': returns a bunch of row data.
+    Get the total rowcount form the latest index (also loops using enumerate) and write it to worksheet
+
+    Finally: creates a workbook and returns the rowcount along with Execution status (any mishap should happen, sets rowcount to -1 and returning the error)
+    """
+
+    cur_dir = os.getcwd()
+    if not os.path.exists(tc_no):
+        os.makedirs(tc_no)
+    folname = os.path.join(os.getcwd(),tc_no)
+    filname = tc_no + "_" +  (db1 if i == 0 else db2)
+    #print folname
+    workbook = xlsxwriter.Workbook(folname+"\\" + filname +".xlsx", {'constant_memory': True})
+    worksheet = workbook.add_worksheet()
+    bold_f = workbook.add_format({'bold': True})
+    string_f = workbook.add_format({'num_format': 'General'})
+    date_f = workbook.add_format({'num_format': 'd-mmm-yy'})
+    italic_f = workbook.add_format({'italic': True})
+    number_f = workbook.add_format({'num_format': '###,##0.00;[Red](###,##0.00);"-"'})
+    number_f1 = workbook.add_format({'num_format': '0'})
+    num_stack = ['int','long','decimal']
+    date_stack = ['_dt','_date']
+    amt_stack = ['_amount','_amt','_am','_rt']
+    
+    try:
+        #print qry
+        x = cur.execute(qry)
+        columns = [t[0] for t in x.description]
+	ex_stat = "Y"
+        for e in enumerate(x.description):
+            if e[1][0][e[1][0].rfind('_'):].lower() in date_stack:
+                worksheet.set_column(e[0],e[0], None, date_f)
+                worksheet.write(0,e[0],e[1][0],bold_f)
+            elif e[1][0][e[1][0].rfind('_'):].lower() in amt_stack:
+                worksheet.set_column(e[0],e[0], None, number_f1)
+                worksheet.write(0,e[0],e[1][0],bold_f)
+            else:
+                worksheet.set_column(e[0],e[0], None, string_f)
+                worksheet.write(0,e[0],e[1][0],bold_f)
+        row_count,c = 0,0
+        try:
+            for row in enumerate(rows(x),1):
+                for e in enumerate(row[1]):
+                    worksheet.write(row[0],e[0],e[1])
+            row_count = row[0]
+        except Exception as e1:
+            ex_stat = "N"
+        
+    except Exception as e:
+        row_count = -1
+	ex_stat = [e.__class__.__name__, e.args]
+	workbook.close()
+
+    workbook.close()
+    return row_count,ex_stat
+   
+  
+def the_mayhem(f1,f2):
+    """
+    Gets the two files to compare, Extracts out the names of the workbooks.
+    Iterates over each sheet in both the workbooks and gives sheets to the 'compare' function: returns success message.
+    Forms a dictionary for each sheet with success message/exception if any.    
+    
+    Finally: returns the time took, workbook names, final Success Message and the sheet level dictionary.
+    """
+    t1 = time.time()
+    w1 = load_workbook(f1)
+    w2 = load_workbook(f2)
+    w1n = f1[f1.rfind('/')+1:f1.rfind('.')]
+    w2n = f2[f2.rfind('/')+1:f2.rfind('.')]
+    wbsucc = "Pass"
+    sdic = {}
+
+    for i in xrange(len(w1.worksheets)):
+        for j in xrange(i,i+1):
+            smsg = compare(w1.worksheets[j], w2.worksheets[j],w1n,w2n)
+            sdic[w1.worksheets[j].title] = smsg[0],smsg[1]
+            w2.save(f2)
+    for e in sdic.values():
+        if "Pass" not in e[0]:
+            wbsucc = "Fail"
+    
+    t2 = time.time()
+    ttime = round((t2-t1),2)
+    #print sdic
+    return [ttime,w1n,w2n,wbsucc,sdic]
+
+def the_mess(cl,comp_dir):
+    """
+    Gets the to_compare list of files, comparing directory.
+    Forms the complete file names and gives them to "gongura" : returns the data compared report
+
+    Finally: returns the datacompared report along with Highlighted file.
+    """
+    report = []
+    if cl[0] != '' and cl[1] != '':
+        f1 = os.path.join(comp_dir,cl[0]).replace("\\","/")
+        f2 = os.path.join(comp_dir,cl[1]).replace("\\","/")
+        rprt = the_mayhem(f1,f2)
+        report.append(rprt)
+    return report,f2
+
+def export_check(tcase_no,tcond,c_query,cur_1,cur_2,db_1,db_2):
+    """
+    What? : Sets up the Global variables and Return Messages for main function. Also, decides upon files to compare.
+    
+    Gets the parameters TestCase No, Test Condition, Query, Cursors for two databases and their names.
+    Defining the Parameters as Global, makes them to be used in other functions across whole program, instead passing them everytime.
+
+    Creating the 'Extracts' folder & changing to that directory, Then, calling the 'toexport' function by passing the cursors w.r.t databases connected.
+    use of enumerate: Index based looping, to name the extracted files with their databases(to be used in 'toexport' function)
+    'toexport' returns: rowcount, Execution status.
+
+    listing out the to-be compared .xlsx files in a specific directory for TestcaseNo.
+    Giving the two .xlsx files to "totakura" function for comparing, if the row counts are same for both the extracts.
+    if rowcount is > 5k OR the rowcount differs across two extracts, NO sense in comparing. Hence create a custom return message.
+
+    Finally: changing back the current working directory to original and returning the comparision result, rowcounts and timetook.
+    """
+
+    current_dir = os.getcwd()
+    global tc_no,tc,qry,cur1,cur2,db1,db2
+    tc_no,tc,qry,cur1,cur2,db1,db2 = tcase_no,tcond,c_query,cur_1,cur_2,db_1,db_2
+    rcount = []
+    ta = time.time()
+    if not os.path.exists("Extracts"):
+        os.makedirs("Extracts")
+    os.chdir(os.path.join(os.getcwd(),"Extracts"))
+    for e in enumerate([cur1,cur2]):
+        r_c = toexport(e[0],e[1])
+        rcount.append(r_c)
+
+    comp_dir = os.path.join(os.getcwd(),tc_no)
+    comp_dir_asfile = comp_dir.replace("\\","/")
+    tocon_list = filter(lambda x: x.endswith('.xlsx'), os.listdir(comp_dir))
+   
+    if rcount[0][0] or rcount[1][0] <= 5000:
+        if rcount[0][0] == rcount[1][0]:
+            res = the_mess(tocon_list,comp_dir)
+        else:
+            res = ([['', '', '', 'Verify', 'unMatched Record count']], comp_dir_asfile)
+    else:
+        res = ([['','','','Verify','Record count > 5000']],comp_dir_asfile)
+
+    os.chdir(current_dir)
+    tb = time.time()
+    tres = round((tb-ta),2)
+    #print res
+    return res,rcount,tres
+
+
+
