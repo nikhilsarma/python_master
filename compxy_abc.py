@@ -31,7 +31,7 @@ coldic = {'Cocoa':'D2691E','Blue':'7EC0EE','Olive':'89892B','Yellow':'CCA300','O
 
 def compare(s1, s2, w1n,w2n):
 
-    """
+    """ 
     Gets the two counter sheets from two workbooks:
     
     setsup the scene to scan for the MAX of rows/columns among the sheets(Normalising to cover all cells), and defines three colors 'cfill', 
