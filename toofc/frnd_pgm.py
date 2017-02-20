@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from xlwt import Workbook
 
-os.chdir("C:/Users/nikil/Desktop/sumitha_pgms")
+os.chdir("C:/Users/nikil/Desktop/frnd_pgms")
 fl = [e.lower() for e in filter(lambda x: x.endswith('.log') ,os.listdir(os.getcwd()))]
 
 def foo(d_string):
