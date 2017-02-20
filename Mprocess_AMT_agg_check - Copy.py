@@ -1,3 +1,7 @@
+"""
+Use multiprocessing to extract info across two databases
+"""
+
 import pyodbc
 import xlsxwriter
 import os
@@ -88,7 +92,7 @@ def main((excel_name, tb_list)):
 def mp_handler():
     p = multiprocessing.Pool(2)
     print p
-    os.chdir("C://Users//n.kadayinti//Desktop//HSP_HAAS//haas_hsp")
+    os.chdir("target path to save the final excel files with aggregate sums")
     list1 = ['list of tables env1']
     list2 = ['list of tables env2'
     tbls = (['ENV1',list1],['ENV2',list2])
