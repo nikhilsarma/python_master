@@ -1,7 +1,6 @@
 """
 __author__ = "Nikhil" [Suman (Idea) Kushal, Sushant]
 __copyright__ = "LoL"
-__version__ = "1.0"
 __maintainer__ = "Team E"
 __status__ = "Mess"
 
