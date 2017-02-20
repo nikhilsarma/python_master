@@ -1,12 +1,11 @@
 """
 __author__ = "Nikhil Kumar Kadayinti"
 __copyright__ = "LoL"
-__credits__ = [Team Everest]
-__license__ = "GPL"
-__version__ = "1.0"
-__maintainer__ = "Team Everest"
+__maintainer__ = "Team E"
 __status__ = "Mess"
 
+
+A simple UI using Tkinter for the Data Comp Program 
 """
 
 
