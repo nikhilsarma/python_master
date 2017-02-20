@@ -36,7 +36,7 @@ def final(query):
                 f_qry = f_qry + a[e][0]
         tosql_qry.append(f_qry)
         return f_qry
-
+      
 def new_q(s):
         return old_q.replace("NAME = 'Table'", "NAME = '" + str(s)+"'")
 
