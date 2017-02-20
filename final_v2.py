@@ -1,12 +1,12 @@
 """
 __author__ = "Nikhil" [Suman (Idea) Kushal, Sushant]
 __copyright__ = "LoL"
-__credits__ = [Team Everest]
-__license__ = "GPL"
 __version__ = "1.0"
-__maintainer__ = "Team Everest"
+__maintainer__ = "Team E"
 __status__ = "Mess"
 
+Hits the Database, Executes the queries and formulates a report based on the outputs
+can execute simultaneously across two environments of Databases
 """
 
 
@@ -333,7 +333,5 @@ def runto_excel(base1,base2,regfile):
     ttwo = time.time()
     print "total time is " + str(round((ttwo-tone),2)) + "sec"
     return total_result                
-                    
-                     
-                    
+                                     
                
