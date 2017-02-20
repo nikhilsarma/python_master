@@ -1,11 +1,12 @@
 """
 __author__ = "Nikhil Kumar Kadayinti"
 __copyright__ = "LoL"
-__credits__ = [Team Everest]
-__license__ = "GPL"
 __version__ = "1.0"
-__maintainer__ = "Team Everest"
+__maintainer__ = "Team E"
 __status__ = "Mess"
+
+PGM for comparing two data sheets cell by cell and spitting out the differences/percentages with colors 
+highlighted as comments in the 2nd sheet
 
 """
 
